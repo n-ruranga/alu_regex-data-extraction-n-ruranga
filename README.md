@@ -24,7 +24,7 @@ This project provides a simple yet powerful tool to extract various data types f
 
 ## Live Demo
 
-You can view a live demo of this project at: [YOUR_GITHUB_PAGES_URL]
+You can view a live demo of this project at: https://n-ruranga.github.io/alu_regex-data-extraction-n-ruranga/
 
 ## Installation
 
@@ -32,8 +32,8 @@ To run this project locally:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/alu_regex-data-extraction-YOUR_USERNAME.git
-   cd alu_regex-data-extraction-YOUR_USERNAME
+   git clone https://github.com/n-ruranga/alu_regex-data-extraction-n-ruranga.git
+   cd alu_regex-data-extraction-alu_regex-data-extraction-n-ruranga
    ```
 
 2. Open `index.html` in your web browser

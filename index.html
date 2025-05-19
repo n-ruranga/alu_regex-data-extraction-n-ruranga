@@ -285,7 +285,7 @@
             let patternsHtml = '';
             
             for (const [type, pattern] of Object.entries(extractor.patterns)) {
-                patternsHtml += `<strong>${type}:</strong> ${pattern}\n`;
+                patternsHtml += `${type}: ${pattern}\n`;
             }
             
             patternsDiv.textContent = patternsHtml;
