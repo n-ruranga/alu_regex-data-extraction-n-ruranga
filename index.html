@@ -83,6 +83,26 @@
         .result-list li {
             padding: 8px 0;
             border-bottom: 1px solid #eee;
+            word-break: break-all;
+        }
+        .html-tag {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .html-element {
+            margin-bottom: 8px;
+        }
+        .element-tag {
+            font-family: monospace;
+            color: #e83e8c;
+        }
+        .element-content {
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            margin-left: 10px;
+            border-left: 2px solid #3498db;
         }
         .result-list li:last-child {
             border-bottom: none;
@@ -200,19 +220,23 @@
                         <label for="creditCard-check">Credit Card Numbers</label>
                     </div>
                     <div>
-                        <input type="checkbox" id="time-check">
+                        <input type="checkbox" id="time-check" checked>
                         <label for="time-check">Time Formats</label>
                     </div>
                     <div>
-                        <input type="checkbox" id="htmlTag-check">
+                        <input type="checkbox" id="htmlTag-check" checked>
                         <label for="htmlTag-check">HTML Tags</label>
                     </div>
                     <div>
-                        <input type="checkbox" id="hashtag-check">
+                        <input type="checkbox" id="htmlElement-check" checked>
+                        <label for="htmlElement-check">HTML Elements with Content</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="hashtag-check" checked>
                         <label for="hashtag-check">Hashtags</label>
                     </div>
                     <div>
-                        <input type="checkbox" id="currency-check">
+                        <input type="checkbox" id="currency-check" checked>
                         <label for="currency-check">Currency Amounts</label>
                     </div>
                 </div>
@@ -233,6 +257,7 @@
                         <option value="creditCard">Credit Card Number</option>
                         <option value="time">Time Format</option>
                         <option value="htmlTag">HTML Tag</option>
+                        <option value="htmlElement">HTML Element with Content</option>
                         <option value="hashtag">Hashtag</option>
                         <option value="currency">Currency Amount</option>
                     </select>
@@ -259,6 +284,7 @@
                     <li><strong>Credit Card Numbers</strong>: Identifies credit card formats like 1234 5678 9012 3456 and 1234-5678-9012-3456</li>
                     <li><strong>Time Formats</strong>: Finds times in 24-hour format (14:30) or 12-hour format (2:30 PM)</li>
                     <li><strong>HTML Tags</strong>: Extracts HTML tags like &lt;p&gt; and &lt;div class="example"&gt;</li>
+                    <li><strong>HTML Elements with Content</strong>: Extracts complete HTML elements with their content, like &lt;li&gt;Item&lt;/li&gt;</li>
                     <li><strong>Hashtags</strong>: Identifies social media hashtags like #example and #ThisIsAHashtag</li>
                     <li><strong>Currency Amounts</strong>: Detects monetary values like $19.99 and $1,234.56</li>
                 </ul>
@@ -332,10 +358,52 @@
                         const resultCard = document.createElement('div');
                         resultCard.className = 'result-card';
                         
+                        // Special handling for HTML tags to display them properly
+                        let listItems;
+                        if (type === 'htmlTag') {
+                            listItems = results.map(item => {
+                                // Escape the HTML tag for display
+                                const escapedItem = item
+                                    .replace(/&/g, '&amp;')
+                                    .replace(/</g, '&lt;')
+                                    .replace(/>/g, '&gt;')
+                                    .replace(/"/g, '&quot;')
+                                    .replace(/'/g, '&#039;');
+                                return `<li><span class="html-tag">${escapedItem}</span></li>`;
+                            }).join('');
+                        } else if (type === 'htmlElement') {
+                            listItems = results.map(item => {
+                                // Escape the HTML elements and content for display
+                                const openTag = `<${item.tagName}>`
+                                    .replace(/&/g, '&amp;')
+                                    .replace(/</g, '&lt;')
+                                    .replace(/>/g, '&gt;');
+                                
+                                const closeTag = `</${item.tagName}>`
+                                    .replace(/&/g, '&amp;')
+                                    .replace(/</g, '&lt;')
+                                    .replace(/>/g, '&gt;');
+                                
+                                const content = item.content
+                                    .replace(/&/g, '&amp;')
+                                    .replace(/</g, '&lt;')
+                                    .replace(/>/g, '&gt;')
+                                    .replace(/"/g, '&quot;')
+                                    .replace(/'/g, '&#039;');
+                                
+                                return `
+                                <li class="html-element">
+                                    <div><span class="element-tag">${openTag}</span><span class="element-content">${content}</span><span class="element-tag">${closeTag}</span></div>
+                                </li>`;
+                            }).join('');
+                        } else {
+                            listItems = results.map(item => `<li>${item}</li>`).join('');
+                        }
+                        
                         resultCard.innerHTML = `
                             <div class="result-type">${formatTypeLabel(type)} (${results.length})</div>
                             <ul class="result-list">
-                                ${results.map(item => `<li>${item}</li>`).join('')}
+                                ${listItems}
                             </ul>
                         `;
                         
@@ -360,17 +428,37 @@
                 return;
             }
             
-            const isValid = extractor.validate(type, input);
-            
-            resultDiv.innerHTML = isValid
-                ? `Valid ${formatTypeLabel(type)}!`
-                : `Invalid ${formatTypeLabel(type)}. The input does not match the expected pattern.`;
-            
-            resultDiv.className = isValid
-                ? 'validation-result valid'
-                : 'validation-result invalid';
-            
-            resultDiv.style.display = 'block';
+            try {
+                // Special handling for htmlElement validation
+                if (type === 'htmlElement') {
+                    const regex = new RegExp(extractor.patterns[type].source);
+                    const isValid = regex.test(input);
+                    
+                    resultDiv.innerHTML = isValid
+                        ? `Valid ${formatTypeLabel(type)}!`
+                        : `Invalid ${formatTypeLabel(type)}. The input does not match the expected pattern.`;
+                    
+                    resultDiv.className = isValid
+                        ? 'validation-result valid'
+                        : 'validation-result invalid';
+                } else {
+                    const isValid = extractor.validate(type, input);
+                    
+                    resultDiv.innerHTML = isValid
+                        ? `Valid ${formatTypeLabel(type)}!`
+                        : `Invalid ${formatTypeLabel(type)}. The input does not match the expected pattern.`;
+                    
+                    resultDiv.className = isValid
+                        ? 'validation-result valid'
+                        : 'validation-result invalid';
+                }
+                
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+                resultDiv.className = 'validation-result invalid';
+                resultDiv.style.display = 'block';
+            }
         }
         
         // Format type label for display
@@ -382,6 +470,7 @@
                 'creditCard': 'Credit Card Number',
                 'time': 'Time Format',
                 'htmlTag': 'HTML Tag',
+                'htmlElement': 'HTML Element with Content',
                 'hashtag': 'Hashtag',
                 'currency': 'Currency Amount'
             };
@@ -393,27 +482,111 @@
         function loadSampleData() {
             const sampleText = `Here's some sample text containing various data types:
             
-Contact us at support@example.com or john.doe@company.co.uk for more information.
-Visit our website at https://www.example.com or our documentation at https://docs.example.org/guide
+Contact Information
+For general inquiries:
 
-Customer service: (123) 456-7890
-Technical support: 555-123-4567
-International: +1.987.654.3210
+Email: support@example.com
 
-Payment accepted:
-Credit card: 4111 1111 1111 1111
-Alternative: 5555-5555-5555-4444
+Alternate Email: helpdesk@example.com
 
-Our store is open from 9:00 AM to 17:30 (5:30 PM) daily.
+UK Office: john.doe@company.co.uk
 
-Check out our latest blog post: <article class="featured">
-<h2>New Products</h2>
-<p>Exciting new items now available!</p>
+Sales Team: sales@example.com (Mon-Fri, 9AM-6PM GMT)
+
+Website & Resources
+
+Main Website: https://www.example.com
+
+Documentation Portal: https://docs.example.org/guide
+
+API Reference: https://api.example.org/v2/docs
+
+Community Forum: https://forum.example.com
+
+Customer Support
+
+Customer Service: (123) 456-7890 (Toll-Free)
+
+Technical Support: 555-123-4567 (24/7)
+
+International Hotline: +1.987.654.3210
+
+Fax: +1.555.789.0123
+
+Payment Methods
+Credit/Debit Cards:
+
+Visa: 4111 1111 1111 1111 (Test)
+
+Mastercard: 5555-5555-5555-4444 (Test)
+
+Amex: 3782-822463-10005 (Test)
+
+Discover: 6011-1111-1111-1117 (Test)
+
+Digital Wallets:
+
+PayPal: payments@example.com
+
+Apple Pay, Google Pay Accepted
+
+Cryptocurrency:
+
+Bitcoin: 3FZbgi29cpjq2GjdwV8eyHuJJnkLtktZc5
+
+Ethereum: 0x742d35Cc6634C0532925a3b844Bc454e4438f44e
+
+Business Hours
+
+Store Hours: 9:00 AM to 17:30 (5:30 PM) Daily
+
+Holiday Hours: Closed on Dec 25 & Jan 1
+
+Online Support: 24/7 via chat
+
+Featured Content
+
+
+<article class="featured">
+  <h2>New Product Launch 2023</h2>
+  <p>Explore our latest collection of cutting-edge products:</p>
+  <ul>
+    <li>Premium Smart Home Kit ($499.99)</li>
+    <li>Wireless Pro Headphones ($299.50)</li>
+    <li>Ultra HD 4K Camera ($1,199.00)</li>
+  </ul>
+  <p>Limited-time offer: Free shipping on orders over $50!</p>
 </article>
 
-Follow us on social media with #CompanyName and #NewProducts2023
+Social Media & Marketing
 
-Special offers starting at $19.99, premium packages from $1,299.50!`;
+Hashtags: #CompanyName #NewProducts2023 #TechInnovation
+
+Twitter: @ExampleTech
+
+Instagram: @ExampleOfficial
+
+LinkedIn: Example Corporation
+
+Pricing & Promotions
+
+Starter Pack: $19.99/month
+
+Professional Bundle: $199.99/year (Save 20%)
+
+Enterprise Suite: $1,299.50 (One-time purchase)
+
+Seasonal Discount: Use code SUMMER2023 for 15% off
+
+Additional Details
+
+Headquarters: 123 Business Park, Suite 456, San Francisco, CA 94107
+
+Returns Address: 789 Logistics Center, Austin, TX 78741
+
+Tax ID: 12-3456789
+
+DUNS Number: 00-111-2222`;
             
             document.getElementById('input-text').value = sampleText;
         }

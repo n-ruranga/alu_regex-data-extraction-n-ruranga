@@ -22,8 +22,11 @@ class RegexExtractor {
             // Time pattern covering both 12-hour and 24-hour formats
             time: /\b([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?\s*(AM|PM|am|pm)?\b/g,
             
-            // HTML tag pattern
-            htmlTag: /<\/?[a-z][\s\S]*?>/gi,
+            // HTML tag pattern - improved to better capture HTML tags
+            htmlTag: /<\/?[a-zA-Z][a-zA-Z0-9]*(?:\s+[a-zA-Z][a-zA-Z0-9]*(?:="[^"]*")?)*\s*\/?>/g,
+            
+            // HTML elements pattern - captures both the tags and content between them
+            htmlElement: /<([a-zA-Z][a-zA-Z0-9]*)(?:\s+[a-zA-Z][a-zA-Z0-9]*(?:="[^"]*")?)*\s*>([^<]*)<\/\1>/g,
             
             // Hashtag pattern
             hashtag: /#[a-zA-Z0-9_]+\b/g,
@@ -42,6 +45,20 @@ class RegexExtractor {
     extract(type, text) {
         if (!this.patterns[type]) {
             throw new Error(`Unsupported extraction type: ${type}`);
+        }
+        
+        // Special handling for htmlElement to capture groups
+        if (type === 'htmlElement') {
+            const matches = [];
+            let match;
+            while ((match = this.patterns[type].exec(text)) !== null) {
+                matches.push({
+                    fullMatch: match[0],
+                    tagName: match[1],
+                    content: match[2]
+                });
+            }
+            return matches;
         }
         
         return Array.from(text.matchAll(this.patterns[type]), m => m[0]);
