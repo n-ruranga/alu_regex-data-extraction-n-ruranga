@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regex Data Extraction Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #3498db;
+        }
+        textarea {
+            width: 90%;
+            height: 150px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .result-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 4px 4px 0;
+        }
+        .result-type {
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        .result-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .result-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .result-list li:last-child {
+            border-bottom: none;
+        }
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .validation-input {
+            width: 300px;
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .validation-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .valid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .invalid {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .sample-text {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .sample-button {
+            background-color: #95a5a6;
+            font-size: 12px;
+            padding: 5px 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Regex Data Extraction Tool</h1>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="openTab('extraction')">Data Extraction</button>
+                <button class="tab-button" onclick="openTab('validation')">Validation</button>
+                <button class="tab-button" onclick="openTab('about')">About</button>
+            </div>
+            
+            <div id="extraction" class="tab-content active">
+                <h2>Extract Data from Text</h2>
+                <div class="input-group">
+                    <label for="input-text">Enter text containing data to extract:</label>
+                    <div class="sample-text">Need sample data? Try:</div>
+                    <button class="sample-button" onclick="loadSampleData()">Load Sample Text</button>
+                    <textarea id="input-text" placeholder="Paste your text here..."></textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label>Select data types to extract:</label>
+                    <div>
+                        <input type="checkbox" id="email-check" checked>
+                        <label for="email-check">Email Addresses</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="url-check" checked>
+                        <label for="url-check">URLs</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="phone-check" checked>
+                        <label for="phone-check">Phone Numbers</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="creditCard-check" checked>
+                        <label for="creditCard-check">Credit Card Numbers</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="time-check">
+                        <label for="time-check">Time Formats</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="htmlTag-check">
+                        <label for="htmlTag-check">HTML Tags</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="hashtag-check">
+                        <label for="hashtag-check">Hashtags</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="currency-check">
+                        <label for="currency-check">Currency Amounts</label>
+                    </div>
+                </div>
+                
+                <button onclick="extractData()">Extract Data</button>
+                
+                <div id="extraction-results" class="results"></div>
+            </div>
+            
+            <div id="validation" class="tab-content">
+                <h2>Validate Single Input</h2>
+                <div class="input-group">
+                    <label for="validation-type">Select data type to validate:</label>
+                    <select id="validation-type">
+                        <option value="email">Email Address</option>
+                        <option value="url">URL</option>
+                        <option value="phone">Phone Number</option>
+                        <option value="creditCard">Credit Card Number</option>
+                        <option value="time">Time Format</option>
+                        <option value="htmlTag">HTML Tag</option>
+                        <option value="hashtag">Hashtag</option>
+                        <option value="currency">Currency Amount</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="validation-input">Enter text to validate:</label>
+                    <input type="text" id="validation-input" class="validation-input" placeholder="Enter text...">
+                    <button onclick="validateInput()">Validate</button>
+                </div>
+                
+                <div id="validation-result" class="validation-result" style="display: none;"></div>
+            </div>
+            
+            <div id="about" class="tab-content">
+                <h2>About This Tool</h2>
+                <p>This Regex Data Extraction Tool helps you identify and extract common data patterns from text using regular expressions.</p>
+                
+                <h3>Supported Data Types</h3>
+                <ul>
+                    <li><strong>Email Addresses</strong>: Extracts standard email formats like user@example.com and firstname.lastname@company.co.uk</li>
+                    <li><strong>URLs</strong>: Finds web addresses like https://www.example.com and https://subdomain.example.org/page</li>
+                    <li><strong>Phone Numbers</strong>: Detects various formats including (123) 456-7890, 123-456-7890, and 123.456.7890</li>
+                    <li><strong>Credit Card Numbers</strong>: Identifies credit card formats like 1234 5678 9012 3456 and 1234-5678-9012-3456</li>
+                    <li><strong>Time Formats</strong>: Finds times in 24-hour format (14:30) or 12-hour format (2:30 PM)</li>
+                    <li><strong>HTML Tags</strong>: Extracts HTML tags like &lt;p&gt; and &lt;div class="example"&gt;</li>
+                    <li><strong>Hashtags</strong>: Identifies social media hashtags like #example and #ThisIsAHashtag</li>
+                    <li><strong>Currency Amounts</strong>: Detects monetary values like $19.99 and $1,234.56</li>
+                </ul>
+                
+                <h3>Regular Expression Patterns</h3>
+                <p>Here are the regular expressions used for each data type:</p>
+                <pre id="regex-patterns"></pre>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Created by RURANGA JABES for ALU Regex Data Extraction Project</p>
+        </footer>
+    </div>
+
+    <script src="regex_extractor.js"></script>
+    <script>
+        // Initialize the RegexExtractor
+        const extractor = new RegexExtractor();
+        
+        // Display regex patterns in the About tab
+        document.addEventListener('DOMContentLoaded', () => {
+            const patternsDiv = document.getElementById('regex-patterns');
+            let patternsHtml = '';
+            
+            for (const [type, pattern] of Object.entries(extractor.patterns)) {
+                patternsHtml += `<strong>${type}:</strong> ${pattern}\n`;
+            }
+            
+            patternsDiv.textContent = patternsHtml;
+        });
+        
+        // Tab functionality
+        function openTab(tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (const content of tabContents) {
+                content.classList.remove('active');
+            }
+            
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (const button of tabButtons) {
+                button.classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+        
+        // Extract data from input text
+        function extractData() {
+            const inputText = document.getElementById('input-text').value;
+            const resultsDiv = document.getElementById('extraction-results');
+            resultsDiv.innerHTML = '';
+            
+            if (!inputText.trim()) {
+                resultsDiv.innerHTML = '<p>Please enter some text to extract data from.</p>';
+                return;
+            }
+            
+            let foundData = false;
+            
+            extractor.getSupportedTypes().forEach(type => {
+                const checkbox = document.getElementById(`${type}-check`);
+                
+                if (checkbox && checkbox.checked) {
+                    const results = extractor.extract(type, inputText);
+                    
+                    if (results.length > 0) {
+                        foundData = true;
+                        
+                        const resultCard = document.createElement('div');
+                        resultCard.className = 'result-card';
+                        
+                        resultCard.innerHTML = `
+                            <div class="result-type">${formatTypeLabel(type)} (${results.length})</div>
+                            <ul class="result-list">
+                                ${results.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                        `;
+                        
+                        resultsDiv.appendChild(resultCard);
+                    }
+                }
+            });
+            
+            if (!foundData) {
+                resultsDiv.innerHTML = '<p>No data of the selected types was found in the input text.</p>';
+            }
+        }
+        
+        // Validate single input
+        function validateInput() {
+            const type = document.getElementById('validation-type').value;
+            const input = document.getElementById('validation-input').value;
+            const resultDiv = document.getElementById('validation-result');
+            
+            if (!input.trim()) {
+                resultDiv.style.display = 'none';
+                return;
+            }
+            
+            const isValid = extractor.validate(type, input);
+            
+            resultDiv.innerHTML = isValid
+                ? `Valid ${formatTypeLabel(type)}!`
+                : `Invalid ${formatTypeLabel(type)}. The input does not match the expected pattern.`;
+            
+            resultDiv.className = isValid
+                ? 'validation-result valid'
+                : 'validation-result invalid';
+            
+            resultDiv.style.display = 'block';
+        }
+        
+        // Format type label for display
+        function formatTypeLabel(type) {
+            const labels = {
+                'email': 'Email Address',
+                'url': 'URL',
+                'phone': 'Phone Number',
+                'creditCard': 'Credit Card Number',
+                'time': 'Time Format',
+                'htmlTag': 'HTML Tag',
+                'hashtag': 'Hashtag',
+                'currency': 'Currency Amount'
+            };
+            
+            return labels[type] || type;
+        }
+        
+        // Load sample data
+        function loadSampleData() {
+            const sampleText = `Here's some sample text containing various data types:
+            
+Contact us at support@example.com or john.doe@company.co.uk for more information.
+Visit our website at https://www.example.com or our documentation at https://docs.example.org/guide
+
+Customer service: (123) 456-7890
+Technical support: 555-123-4567
+International: +1.987.654.3210
+
+Payment accepted:
+Credit card: 4111 1111 1111 1111
+Alternative: 5555-5555-5555-4444
+
+Our store is open from 9:00 AM to 17:30 (5:30 PM) daily.
+
+Check out our latest blog post: <article class="featured">
+<h2>New Products</h2>
+<p>Exciting new items now available!</p>
+</article>
+
+Follow us on social media with #CompanyName and #NewProducts2023
+
+Special offers starting at $19.99, premium packages from $1,299.50!`;
+            
+            document.getElementById('input-text').value = sampleText;
+        }
+    </script>
+</body>
+</html>
